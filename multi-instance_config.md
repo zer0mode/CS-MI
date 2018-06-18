@@ -1,6 +1,6 @@
 ### Collec-science multi-instance config [CS-MI]
 
-A working collec-science should be running on the system prior to creating a collec instance. For further information see the collec science [install guide][] and the [installation procedure][].
+A working collec-science should be running on the system prior to creating a collec instance. For further information see the collec science [install guide][] and the [installation procedure][]. The mechanism of multi-instance functionality is presented in the chapter _2.2.5 Configurer le dossier d'installation_.
 
 [install guide]: https://github.com/Irstea/collec/blob/hotfix-2.0.2/database/documentation/collec_installation_configuration.pdf
 [installation procedure]: https://github.com/Irstea/collec/blob/hotfix-2.0.2/install/deploy_new_instance.sh
@@ -14,18 +14,26 @@ A working collec-science should be running on the system prior to creating a col
 	|   |-- www
 	|   |   |-- collec-science
 	+   |   |   |-- collec ( -> /path/to/collec-lastver)
-	    +   |   |
-	        +   |-- bin* ( -> collec)
+	    +   |   |   |-- param
+	        +   |   |   |--param.inc.php
+	            |   |   |
+	            |   +   |
+	            |       +
+	            |
+	            |-- bin* ( -> collec)
 	            |
 	            |-- first-instance
 	            |   |-- bin* ( -> ../bin)
 	            |   \-- param.ini
 	            |
-	            \-- second-instance
-	                |-- bin* ( -> ../bin)
-	                \-- param.ini
-	    
-	( -> <symbolic link>)
+	            |-- second-instance
+	            |   |-- bin* ( -> ../bin)
+	            |   \-- param.ini
+	            |
+	            +
+
+>	<sup>-> _\<symbolic link\>_</sup>  
+>	<sup>+ _additional content</sup>_
 
 Create the structure
 
@@ -40,7 +48,7 @@ Create the structure
 Comments should be prefixed with semicolon character  
 <sup>info @ [php.net](http://php.net/manual/en/function.parse-ini-file.php#refsect1-function.parse-ini-file-changelog)</sup>
 
-Here below there are 4 variables. The value of #var is 222. Strings containing non-aplhanumeric characters should be enclosed with double-quotes _`""`_.
+Here below there are 4 variables. The value of #var is 222. Strings containing non-alphanumeric characters should be enclosed with double-quotes _`""`_.
 ``` ini
 ;this is a comment
 var = 1
@@ -67,7 +75,7 @@ GACL_dsn = "pgsql:host=localhost;dbname=dbname"
 Use the default **`param.inc.php.dist`** or already configured **`param.inc.php`** file for the new instance. The _Minimal configuration **(A)**_ option below will create the **`param.ini`** file. Choose the _optional configuration **(B)**_ for more complex instance configuration.
 
 * _Minimal configuration requirements **(A)**_  
-`sed -e 's/^\$//' -e 's/;$//' -ne '/titre =\|login =\|passwd =\|dsn =/p' -e '1i ; First instance config' collec/param/param.inc.php.dist > first-instance/param.ini`
+`sudo sed -e 's/^\$//' -e 's/;$//' -ne '/titre =\|login =\|passwd =\|dsn =/p' -e '1i ; First instance config' collec/param/param.inc.php.dist > first-instance/param.ini`
 
   - `'s/^\$//'`					_create keys - remove leading `$` characters_
   - `'s/;$//'`					_remove ending semicolons `;`_
@@ -75,20 +83,22 @@ Use the default **`param.inc.php.dist`** or already configured **`param.inc.php`
   - `'1i ; First instance config'`		_add header_
 
 > * Including all variables in scope _( optional and instance specific configuration ) **(B)**_  
- `sed -e 's/^[^$].*$/;&/' -e 's/\$//g' -e 's/;$//' -e 's/^\(paramI\|SMARTY\)/;&/' collec/param/param.inc.php.dist > second-instance/param.ini`  
-   - `'s/^[^$].\+$/;&/'` _or_ `'s/^[^$].*$/;&/'`	_add ini comments_
-   - `'s/\$//g'`					_remove _'$'_ character from variable names_  
-   - `'s/;$//'`						_remove semicolons at the end of lines_  
-   - `'s/^\(paramI\|SMARTY\)/;&/'`			_comment param.ini and smarty variables_  
-
+> `sudo sed -e 's/^[^$].*$/;&/' -e 's/\$//g' -e 's/;$//' -e 's/^\(paramI\|SMARTY\)/;&/' collec/param/param.inc.php.dist > second-instance/param.ini`  
+>   - `'s/^[^$].\+$/;&/'` _or_ `'s/^[^$].*$/;&/'`	_add ini comments_
+>   - `'s/\$//g'`					_remove _'$'_ character from variable names_  
+>   - `'s/;$//'`						_remove semicolons at the end of lines_  
+>   - `'s/^\(paramI\|SMARTY\)/;&/'`			_comment param.ini and smarty variables_  
+>
 > * Removing php comments - for complete clean-up run  
-   `sed -e 's/^[\*/<>? ][\*/<>? ]*/;/' -e 's/\$//g' -e 's/;$//' -e 's/^\(paramI\|SMARTY\)/;&/' collec/param/param.inc.php.dist > second-instance/param.ini`  
-   - `-r 's/^[\*/><? ]+/;/'`	_extended regular expressions version_ _or shorter_ `'s/^[\*/><? ]\+/;/'`  
+>   `sudo sed -e 's/^[\*/<>? ][\*/<>? ]*/;/' -e 's/\$//g' -e 's/;$//' -e 's/^\(paramI\|SMARTY\)/;&/' collec/param/param.inc.php.dist > second-instance/param.ini`  
+>   - `-r 's/^[\*/><? ]+/;/'`	_extended regular expressions version_ _or shorter_ `'s/^[\*/><? ]\+/;/'`  
 
 ### Configure databases and credentials
 
-Modify the connection details in the created **`param.ini`** file to match the configuration in **`pg_hba.conf`** and enable the DB access.
-> 
+Modify the connection details in the created **`param.ini`** file to match the configuration in **`pg_hba.conf`** and enable the DB access. You might need to change the access rights.
+
+`sudo chgrp www-data first-instance/param.ini`  
+`sudo chmod 750 first-instance/param.ini`
 
 #### Start from scratch
 To start a fresh instance create a new database using the collec-science [init script]<sup id="n1">[(1)](#f1)</sup>. Don't forget to chose a database name suiting the new instance and to configure its access in the postgresql pg_hba.conf
@@ -109,5 +119,28 @@ If the database contains data which can be used in the new instance :
 
 <sup id="f2">(2)</sup>_At the present time the username of the database [has to be identic](https://github.com/Irstea/collec/issues/194) to the username of the exported DB._ [↩](#n2)
 
-Consider reading the chapters about upgrading database if version of the new instance is newer from the currently installed collec-science on your system.
+> Consider reading the chapter about upgrading the database - _2.6.4 Mise à jour de la structure de la base de données_ if you're planning to set-up multiple instances based on an updated collec-science version or if the imported database version does not match with the one currently installed on the system.
 
+### Configure multi-instance.conf
+
+Create a new **`first-instance.conf`** in */etc/apache2/sites-available/*
+
+`sudo cp -a /etc/apache2/sites-available/collec-science.conf /etc/apache2/sites-available/first-instance.conf`
+
+Replace current domain name with the _first-instance_ domain.
+> \# you must change lines 9, 10, 12 and 15, 16 (replace collec.mysociety.com by your fqdn)  
+> <sup>https://github.com/Irstea/collec/blob/8ecbf85f555f13fbcc61d8bd07d0d4b3c1692a23/install/apache2/collec-science.conf#L1</sup>
+
+`<Document root>` and `<Directory>` have to be redefined as well. Modify paths on lines [37][], [39][] and [45][] to  
+_`/var/www/collec-science/first-instance/bin`_
+
+[37]: https://github.com/Irstea/collec/blob/8ecbf85f555f13fbcc61d8bd07d0d4b3c1692a23/install/apache2/collec-science.conf#L37
+[39]: https://github.com/Irstea/collec/blob/8ecbf85f555f13fbcc61d8bd07d0d4b3c1692a23/install/apache2/collec-science.conf#L39
+[45]: https://github.com/Irstea/collec/blob/8ecbf85f555f13fbcc61d8bd07d0d4b3c1692a23/install/apache2/collec-science.conf#L45
+
+Enable the new site and reload apache2
+`sudo a2ensite first-instance`
+`sudo service apache2 reload`
+
+---
+The new instance should be up. Check if the site title corresponds with the _APPLI\_titre_ set in the instance's param.ini.
