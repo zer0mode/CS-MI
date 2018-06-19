@@ -1,11 +1,11 @@
-### Collec-science multi-instance config [CS-MI]
+## Collec-science multi-instance config [CS-MI]
 
 A working collec-science should be running on the system prior to creating a collec instance. For further information see the collec science [install guide][] and the [installation procedure][]. The mechanism of multi-instance functionality is presented in the chapter _2.2.5 Configurer le dossier d'installation_.
 
 [install guide]: https://github.com/Irstea/collec/blob/hotfix-2.0.2/database/documentation/collec_installation_configuration.pdf
 [installation procedure]: https://github.com/Irstea/collec/blob/hotfix-2.0.2/install/deploy_new_instance.sh
 
-#### Create multi-instance tree structure
+### Create multi-instance tree structure
 
 ##### CS-MI tree example
 
@@ -92,6 +92,19 @@ Use the default **`param.inc.php.dist`** or already configured **`param.inc.php`
 > * Removing php comments - for complete clean-up run  
 >   `sudo sed -e 's/^[\*/<>? ][\*/<>? ]*/;/' -e 's/\$//g' -e 's/;$//' -e 's/^\(paramI\|SMARTY\)/;&/' collec/param/param.inc.php.dist > second-instance/param.ini`  
 >   - `-r 's/^[\*/><? ]+/;/'`	_extended regular expressions version_ _or shorter_ `'s/^[\*/><? ]\+/;/'`  
+
+### Enable multi-instance mode
+
+1. Change the login credentials in the new **`first-instance/param.ini`**.
+
+2. To enable the multi-instance _'mode'_ uncomment the lines [144][] and [145][] in **`/var/www/collec-science/collec/param/param.inc.php`**.
+
+``` php
+//$chemin = substr($_SERVER["DOCUMENT_ROOT"],0, strpos($_SERVER["DOCUMENT_ROOT"],"/bin"));
+//$paramIniFile = "$chemin/param.ini";
+```
+[144]: https://github.com/Irstea/collec/blob/8ecbf85f555f13fbcc61d8bd07d0d4b3c1692a23/param/param.inc.php.dist#L144
+[145]: https://github.com/Irstea/collec/blob/8ecbf85f555f13fbcc61d8bd07d0d4b3c1692a23/param/param.inc.php.dist#L145
 
 ### Configure databases and credentials
 
