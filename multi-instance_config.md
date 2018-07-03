@@ -1,5 +1,21 @@
 ## Collec-science multi-instance config [CS-MI]
 
+###### Proc steps
+
+- [Note 0](#note-0)
+- [Create multi-instance tree structure](#create-multi-instance-tree-structure)
+	- [CS-MI tree example](#cs-mi-tree-example)
+	- [Extract keys and values](#extract-keys-and-values)
+		- [ini file structure](#ini-file-structure)
+- [Enable multi-instance mode](#enable-multi-instance-mode)
+- [Configure databases and credentials](#configure-databases-and-credentials)
+	- [Start from scratch](start-from-scratch)
+	- [Duplicate existing database](#duplicate-existing--database)
+- [Configure multi-instance.conf](#configure-multi-instanceconf)
+- [Additional instances](#additional-instances)
+
+##### Note 0
+
 A working collec-science should be running on the system prior to creating a collec instance. For further information see the collec science [install guide][] and the [installation procedure][]. The mechanism of multi-instance functionality is presented in the chapter _2.2.5 Configurer le dossier d'installation_.
 
 [install guide]: https://github.com/Irstea/collec/blob/hotfix-2.0.2/database/documentation/collec_installation_configuration.pdf
@@ -15,22 +31,22 @@ A working collec-science should be running on the system prior to creating a col
 	|   |   |-- collec-science
 	+   |   |   |-- collec ( -> /path/to/collec-lastver)
 	    +   |   |   |-- param
-	        +   |   |   |--param.inc.php
-	            |   |   |
-	            |   +   |
-	            |       +
-	            |
-	            |-- bin* ( -> collec)
-	            |
-	            |-- first-instance
-	            |   |-- bin* ( -> ../bin)
-	            |   \-- param.ini
-	            |
-	            |-- second-instance
-	            |   |-- bin* ( -> ../bin)
-	            |   \-- param.ini
-	            |
-	            +
+		+   |   |   |--param.inc.php
+		    |   |   |
+		    |   +   |
+		    |       +
+		    |
+		    |-- bin* ( -> collec)
+		    |
+		    |-- first-instance
+		    |   |-- bin* ( -> ../bin)
+		    |   \-- param.ini
+		    |
+		    |-- second-instance
+		    |   |-- bin* ( -> ../bin)
+		    |   \-- param.ini
+		    |
+		    +
 
 >	<sup>-> _\<symbolic link\>_</sup>  
 >	<sup>+ _additional content</sup>_
@@ -40,7 +56,7 @@ Create the structure
 `cd /path/to/collec-science`  
 `sudo ln -s collec bin`  
 `sudo mkdir first-instance`  _this is the instance folder (see the tree example)_  
-`sudo ln -s bin first-instance/bin` 
+`sudo ln -s ../bin first-instance/bin` 
 
 #### Extract keys and values
 
@@ -125,12 +141,10 @@ To start a fresh instance create a new database using the collec-science [init s
 If the database contains data which can be used in the new instance :
 
 `sudo -u postgres pg_dump myhotdb > path/to/hotDBexport.sql` _export the existing DB_  
-`sudo -u postgres psql -c "CREATE DATABASE newinstancedb OWNER collec;"` _create a new empty DB_ <sup id="n1">[(2)](#f2)</sup>
+`sudo -u postgres psql -c "CREATE DATABASE newinstancedb OWNER collec;"` _create a new empty DB_
 > <sup>make sure the _OWNER_ has been previously created</sup>
 
 `sudo -u postgres psql newinstancedb < path/to/hotDBimport.sql` _and reimport the exported DB_
-
-<sup id="f2">(2)</sup>_At the present time the username of the database [has to be identic](https://github.com/Irstea/collec/issues/194) to the username of the exported DB._ [↩](#n2)
 
 > Consider reading the chapter about upgrading the database - _2.6.4 Mise à jour de la structure de la base de données_ if you're planning to set-up multiple instances based on an updated collec-science version or if the imported database version does not match with the one currently installed on the system.
 
@@ -156,4 +170,18 @@ Enable the new site and reload apache2
 `sudo service apache2 reload`
 
 ---
-The new instance should be up. Check if the site title corresponds with the _APPLI\_titre_ set in the instance's param.ini.
+
+The new instance should be up. _~~Check if the site title corresponds with the `APPLI_titre` set in the instance's param.ini.~~_ _APPLI\_titre_ is obsolette and has been managed as _**`APPLI_title`**_ via database since version 2.1.
+
+### Additional instances
+
+Refer to the [Proc steps](#proc-steps) to properly configure all the instance elements.
+
+- Create a new database
+- Duplicate the instance folder and edit the **`param.ini`** according to the connection details
+- Recreate the _`bin`_ link if necessary
+- Duplicate the **`first-instance.conf`** file and change the domain name details
+
+---
+
+The additional instance should be also up.
