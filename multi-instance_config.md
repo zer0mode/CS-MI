@@ -9,7 +9,7 @@
 		- [ini file structure](#ini-file-structure)
 - [Enable multi-instance mode](#enable-multi-instance-mode)
 - [Configure databases and credentials](#configure-databases-and-credentials)
-	- [Start from scratch](start-from-scratch)
+	- [Start from scratch](#start-from-scratch)
 	- [Duplicate existing database](#duplicate-existing--database)
 - [Configure multi-instance.conf](#configure-multi-instanceconf)
 - [Additional instances](#additional-instances)
