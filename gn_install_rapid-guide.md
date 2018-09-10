@@ -1,6 +1,16 @@
 ### GeoNetwork - rapid install
 
-##### system specifics
+###### Contains
+
+\_\_\_\_\_[System specifics](#system-specifics)  
+\_\_\_**[Tomcat install & config](#tomcat-install--config)**  
+\_\_\_**[Configure postgresql](#configure-postgresql)**  
+\_\_\_**[GeoNetwork configuration](#geonetwork-configuration)**  
+\_\_\_\_\_\_[Appendix - tomcat errors & solutions](#appendix---tomcat-errors--solutions)
+
+---
+
+##### System specifics
 
 > <kbd>::</kbd> Debian GNU/Linux 9 (stretch) <kbd>::</kbd> Apache/2.4.25 (Debian) <kbd>::</kbd> Apache Tomcat/8.5.14 (Debian) <kbd>::</kbd> Java(TM) SE Runtime Environment (build 1.8.0_171-b11) <kbd>::</kbd> PostgreSQL 9.6.7 <kbd>::</kbd> GeoNetwork v3.4.2 <kbd>::</kbd>
 
@@ -63,7 +73,7 @@ Apply modifications by restarting the service
 
 Check if _"It works !"_ - run **localhost:8080** in browser.
 
-Geonetwork-Apache configuration is not required. This step is optional, but eventually handy for URL _"beautification"_.  
+Geonetwork-Apache configuration is not required. This step is optional, but eventually handy for URL _"beautification"_ and very recommended in case you are behind the walls of a military base.  
 > `sudo cp -a /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/geonetwork.conf`
 >
 > Edit **`geonetwork.conf`** - add in \<Virtualhost\> section  
