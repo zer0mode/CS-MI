@@ -2,24 +2,26 @@
 
 ###### Proc steps
 
-- [Note 0](#note-0)
-- [Create multi-instance tree structure](#create-multi-instance-tree-structure)
-	- [CS-MI tree example](#cs-mi-tree-example)
-	- [Extract keys and values](#extract-keys-and-values)
-		- [ini file structure](#ini-file-structure)
-- [Enable multi-instance mode](#enable-multi-instance-mode)
-- [Configure databases and credentials](#configure-databases-and-credentials)
-	- [Start from scratch](#start-from-scratch)
-	- [Duplicate existing database](#duplicate-existing--database)
-- [Configure multi-instance.conf](#configure-multi-instanceconf)
-- [Additional instances](#additional-instances)
+\_\_\_\_\_[Note 0](#note-0)  
+\_\_\_**[Create multi-instance tree structure](#create-multi-instance-tree-structure)**  
+\_\_\_\_\_[CS-MI tree example](#cs-mi-tree-example)  
+\_\_\_\_[Extract keys and values](#extract-keys-and-values)  
+\_\_\_\_\_[ini file structure](#ini-file-structure)  
+\_\_\_**[Enable multi-instance mode](#enable-multi-instance-mode)**  
+\_\_\_**[Configure databases and credentials](#configure-databases-and-credentials)**  
+\_\_\_\_[Start from scratch](#start-from-scratch)  
+\_\_\_\_[Duplicate existing database](#duplicate-existing-database)  
+\_\_\_**[Configure multi-instance.conf](#configure-multi-instanceconf)**  
+\_\_\_[Additional instances](#additional-instances)
+
+---
 
 ##### Note 0
 
 A working collec-science should be running on the system prior to creating a collec instance. For further information see the collec science [install guide][] and the [installation procedure][]. The mechanism of multi-instance functionality is presented in the chapter _2.2.5 Configurer le dossier d'installation_.
 
-[install guide]: https://github.com/Irstea/collec/blob/hotfix-2.0.2/database/documentation/collec_installation_configuration.pdf
-[installation procedure]: https://github.com/Irstea/collec/blob/hotfix-2.0.2/install/deploy_new_instance.sh
+[install guide]: https://github.com/Irstea/collec/blob/master/database/documentation/collec_installation_configuration.pdf
+[installation procedure]: https://github.com/Irstea/collec/blob/master/install/deploy_new_instance.sh
 
 ### Create multi-instance tree structure
 
@@ -76,13 +78,13 @@ string_special = "that's special ;"
 A typical minimal CS-MI param.ini file should contain
 
 ``` ini
-APPLI_titre = First Instance
+; First instance param
 ; Database management
 BDD_login = username
 BDD_passwd = password
 BDD_dsn = "pgsql:host=localhost;dbname=dbname"
 
-; Rights management, logins and log records database
+; Rights management, logins and log records
 GACL_dblogin = username
 GACL_dbpasswd = password
 GACL_dsn = "pgsql:host=localhost;dbname=dbname"
@@ -159,14 +161,15 @@ Replace current domain name with the _first-instance_ domain.
 > <sup>https://github.com/Irstea/collec/blob/8ecbf85f555f13fbcc61d8bd07d0d4b3c1692a23/install/apache2/collec-science.conf#L1</sup>
 
 `<Document root>` and `<Directory>` have to be redefined as well. Modify paths on lines [37][], [39][] and [45][] to  
-_`/var/www/collec-science/first-instance/bin`_
+_`/var/www/collec-science/first-instance/bin`_.
 
 [37]: https://github.com/Irstea/collec/blob/8ecbf85f555f13fbcc61d8bd07d0d4b3c1692a23/install/apache2/collec-science.conf#L37
 [39]: https://github.com/Irstea/collec/blob/8ecbf85f555f13fbcc61d8bd07d0d4b3c1692a23/install/apache2/collec-science.conf#L39
 [45]: https://github.com/Irstea/collec/blob/8ecbf85f555f13fbcc61d8bd07d0d4b3c1692a23/install/apache2/collec-science.conf#L45
 
 Enable the new site and reload apache2
-`sudo a2ensite first-instance`
+
+`sudo a2ensite first-instance`  
 `sudo service apache2 reload`
 
 ---
