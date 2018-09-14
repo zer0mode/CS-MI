@@ -56,8 +56,9 @@ A working collec-science should be running on the system prior to creating a col
 Create the structure
 
 `cd /path/to/collec-science`  
+`sudo ln -s /path/to/collec-lastver collec`  _<sup>**`collec-lastver`** can reside in **`collec-science`** folder<sup>_  
 `sudo ln -s collec bin`  
-`sudo mkdir first-instance`  _this is the instance folder (see the tree example)_  
+`sudo mkdir first-instance`  _<sup>this is the instance folder (see the [tree example](#cs-mi-tree-example))<sup>_  
 `sudo ln -s ../bin first-instance/bin` 
 
 #### Extract keys and values
@@ -89,7 +90,9 @@ GACL_dblogin = username
 GACL_dbpasswd = password
 GACL_dsn = "pgsql:host=localhost;dbname=dbname"
 ```
+_You can create the **`first-instance/param.ini`** file using the above example and skip to the [next chapter](#enable-multi-instance-mode). However, verify that keys correspond with those in the **`param.inc.php.dist`** of the deployed application._
 
+---
 Use the default **`param.inc.php.dist`** or already configured **`param.inc.php`** file for the new instance. The _Minimal configuration **(A)**_ option below will create the **`param.ini`** file. Choose the _optional configuration **(B)**_ for more complex instance configuration.
 
 * _Minimal configuration requirements **(A)**_  
