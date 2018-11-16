@@ -1,0 +1,18 @@
+{
+  "db": {
+    "drv": "PostgreSQL",
+    "db": "hotdb",
+    "schema": "fryinghot",
+    "user": "whoami",
+    "pwd": "guessme",
+    "host": "localhost",
+    "port": "5432"
+  },
+  "gsheetUrls": {
+    "gsheet00": "https://docs.google.com/spreadsheets/URL01",
+    "gsheet01": "https://docs.google.com/spreadsheets/URL01",
+    "gsheet02": "https://docs.google.com/spreadsheets/URL02",
+    "gsheet03": "https://docs.google.com/spreadsheets/URL03",
+    "gsheet04": "https://docs.google.com/spreadsheets/URL04"
+  }
+}  
