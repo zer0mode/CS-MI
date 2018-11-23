@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:fo="http://www.w3.org/1999/XSL/Format">
+    <xsl:output method="xml" indent="yes" />
+    <xsl:template match="objects">
+        <fo:root>
+            <fo:layout-master-set>
+                <fo:simple-page-master master-name="label" page-height="5.08cm" page-width="7.62cm" margin-left="0cm" margin-top="0cm" margin-bottom="0cm" margin-right="0cm">
+                    <fo:region-body />
+                </fo:simple-page-master>
+            </fo:layout-master-set>
+            <fo:page-sequence master-reference="label">
+                <fo:flow flow-name="xsl-region-body">
+                    <fo:block>
+                        <xsl:apply-templates select="object" />
+                    </fo:block>
+                </fo:flow>
+            </fo:page-sequence>
+        </fo:root>
+    </xsl:template>
+    <xsl:template match="object">
+        <fo:table table-layout="fixed" border-collapse="collapse" border-style="none" width="7.3cm" keep-together.within-page="always">
+            <fo:table-column column-width="3cm" />
+            <fo:table-column column-width="4.5cm" />
+            <fo:table-body border-style="none">
+                <fo:table-row>
+                    <fo:table-cell>
+                        <fo:block>
+                            <fo:external-graphic>
+                                <xsl:attribute name="src">
+                                    <xsl:value-of select="concat(uid,'.png')" />
+                                </xsl:attribute>
+                                <xsl:attribute name="content-height">scale-to-fit</xsl:attribute>
+                                <xsl:attribute name="height">3cm</xsl:attribute>
+                                <xsl:attribute name="scaling">uniform</xsl:attribute>
+                            </fo:external-graphic>
+                        </fo:block>
+                        <fo:block linefeed-treatment="preserve" line-height="75%" margin-left="0.2cm">
+                            <fo:inline font-size="7pt">igsn: <xsl:value-of select="igsn" /></fo:inline>
+                        </fo:block>
+                        <fo:block margin-left="0.5cm">
+                            <fo:external-graphic height="14mm" width="20mm" content-height="scale-to-fit" scaling="uniform" src="../display/media/logo_Equipex_CLIMCOR.jpg" />
+                        </fo:block>
+                    </fo:table-cell>
+                    <fo:table-cell>
+                        <xsl:attribute name="content-height">scale-to-fit</xsl:attribute>
+                        <xsl:attribute name="content-width">scale-to-fit</xsl:attribute>
+                        <fo:block line-height="150%" margin-top="0.4cm">
+                            <fo:inline font-size="14pt" font-weight="bold">
+                                <xsl:value-of select="loc" />
+                            </fo:inline>
+                        </fo:block>
+                        <fo:block line-height="150%">
+                            <fo:inline font-size="10pt">
+                                <xsl:value-of select="type_de_materiel" />
+                            </fo:inline>
+                        </fo:block>
+                        <fo:block line-height="150%">
+                            <fo:inline font-size="15pt" font-weight="bold">
+                                <xsl:value-of select="id" />
+                            </fo:inline>
+                        </fo:block>
+                        <fo:block line-height="150%">
+                            <fo:inline font-size="12pt" font-weight="bold">s: <xsl:value-of select="numero_ordre_section" /> / <xsl:value-of select="profondeur_top" /> / <xsl:value-of select="profondeur_bottom" /> cm</fo:inline>
+                        </fo:block>
+                        <fo:block line-height="170%">
+                            <fo:inline font-size="8pt">
+                                <xsl:value-of select="pi" />
+                            </fo:inline>
+                        </fo:block>
+                    </fo:table-cell>
+                </fo:table-row>
+            </fo:table-body>
+        </fo:table>
+    </xsl:template>
+</xsl:stylesheet>
