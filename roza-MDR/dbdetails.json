@@ -14,5 +14,12 @@
     "gsheet02": "https://docs.google.com/spreadsheets/URL02",
     "gsheet03": "https://docs.google.com/spreadsheets/URL03",
     "gsheet04": "https://docs.google.com/spreadsheets/URL04"
+  },
+  "patterns": {
+    "measureCols": "define colnames from the appropriate DB table use space as separator",
+    "lithoCols": "define colnames from the appropriate DB table use space as separator",    
+    "measureData": "analysis",
+    "lithoData": "log",
+    "parameters": "define a sequence of parameters in the raw data file use space as separator"
   }
-}  
+}
