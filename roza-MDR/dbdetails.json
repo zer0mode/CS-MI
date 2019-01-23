@@ -18,8 +18,10 @@
   "patterns": {
     "measureCols": "define colnames from the appropriate DB table use space as separator",
     "lithoCols": "define colnames from the appropriate DB table use space as separator",    
-    "measureData": "analysis",
-    "lithoData": "log",
     "parameters": "define a sequence of parameters in the raw data file use space as separator"
+  },
+  "sources": {
+    "measureData": "analysis",
+    "lithoData": "log"
   }
 }
