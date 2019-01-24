@@ -13,4 +13,7 @@ This is a repository of guides, instructions and variants of support for :
 ##### [Roza-MDD](https://github.com/zer0mode/CS-repo/tree/master/roza-MDD) Data & metadata integration
 Data integration scripts are generic and scalable - currently tested with coring data on Rozana database (ROZA - Rétro-observatoire des zones ateliers)
 
+> MDR folder has moved to MDD; see CS-repo [history]
+
 [collec-science]: https://github.com/Irstea/collec/
+[history]:https://github.com/zer0mode/CS-repo/commits/master
