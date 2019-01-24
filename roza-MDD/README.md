@@ -15,7 +15,7 @@
 
   > file content = type of data (measure, litho, ...) is 'recognized' by its filename (analysis, log, ...)
 
-####  Running the [integration] script:
+#### Running the [integration] script:
 
 + This script and the json config file should be on the same location before commencing data import
 + Raw data / source files have to be located in the sub-folder **`./data`**
@@ -29,9 +29,9 @@
 
 #### Importing data in database
 
-Once the raw data is restructured it can be imported in database. If database is ready the importation can be launched with the [db_rozana script]
+Once the raw data is restructured it can be imported in database. If database is ready the importation can be launched with the [db_rozana script].
 
-Keep the script in the same location with the config file and the [integrator].
+Keep the script in the same location with the config file and the [integrator](#running-the-integration-script).
 
 **Important**
 
@@ -46,5 +46,3 @@ Importing a table without existing foreing keys will not be possible. For exampl
 [path]:https://github.com/zer0mode/CS-repo/blob/db8ef7bed341570af29041412148a1afaa6e238f/roza-MDD/rozana_data-integrator.R#L379
 
 [db_rozana script]:https://github.com/zer0mode/CS-repo/blob/master/roza-MDD/db_rozana.R
-
-[integrator]:running-the-integration-script
