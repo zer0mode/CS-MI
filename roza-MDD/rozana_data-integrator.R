@@ -152,11 +152,11 @@ integrateData <- function(dataIn) {
 #             reStructured ~ non-'parameter' data-fields and 'header' of restructuration
 #             data ~ dataframe with restructured 'measure' raw data or other raw data
 #             reDim ~ difference between DB data fields and data columns of restructured data
-#             finalNames ~ 'stored' data fields= mapNames replacement (mapNames contents modify)
-#             matchMapNames ~ finalNames 'lexical roots', used for matching and re-indexind
+#             dbDataFields ~ 'stored' data fields= mapNames replacement (mapNames contents modify)
+#             matchMapNames ~ dbDataFields 'lexical roots', used for matching and re-indexind
 #             matchIntegNames ~ data colnames 'lexical roots'
 #             indexed, populated, lastFound ~ mapping calculation variables
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # Decompose the resource vector
   #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -346,7 +346,7 @@ integrateData <- function(dataIn) {
     colConfirm <- toupper(readline("Export to file (press [enter] or [E] to export)? : "))
     if (colConfirm == '' | colConfirm == 'E') {
       date <- format(Sys.time(), "%d%m%y-%H%M%S")
-      toCsv <- (paste0("rozana_",gsub("id_","",finalNames[1]),"_",date,"_",basename(dataIn[[1]])))
+      toCsv <- (paste0("rozana_",gsub("id_","",dbDataFields[1]),"_",date,"_",basename(dataIn[[1]])))
       message("Writing data to file: ",path,"/",toCsv)
       write.csv2(data, file = toCsv, row.names=FALSE)
       message('Data written')
