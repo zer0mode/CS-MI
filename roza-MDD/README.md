@@ -15,17 +15,36 @@
 
   > file content = type of data (measure, litho, ...) is 'recognized' by its filename (analysis, log, ...)
 
-####  Running the script:
+####  Running the [integration] script:
 
 + This script and the json config file should be on the same location before commencing data import
 + Raw data / source files have to be located in the sub-folder **`./data`**
   + During the script flow user can select specific datasets if multiple files are found
 + Set the **"upMatcher"** variable with _*`dbdetails.json`*_ [path] or use the _file.choose()_ function
 
----
->_Note : Pure script has around 170 lines. If you want to delete commented lines run_
+
+>_Note : Pure script has less than 140 lines of code. If you want to delete commented lines run_
+
 `sudo sed '/^[[:space:]]*#.*$/d' rozana_data-integrator.R > rozana_data-integrator_uncommented.R`
 
-[Configuration file]:https://github.com/zer0mode/CS-repo/blob/master/roza-MDR/dbdetails.json
+#### Importing data in database
 
-[path]:https://github.com/zer0mode/CS-repo/blob/dcb307d04c4c77652525adba6350828d2cfbabff/roza-MDR/rozana_data-integrator.R#L379
+Once the raw data is restructured it can be imported in database. If database is ready the importation can be launched with the [db_rozana script]
+
+Keep the script in the same location with the config file and the [integrator].
+
+**Important**
+
++ _Database contents_  
+Importing a table without existing foreing keys will not be possible. For example, new 'measure' data can be imported if the corresponding `core` and `parameter` keys exist.  Analogically for `lithologic` data importation, `core` and `facies` keys have to be present in the database.
+
+
+[Configuration file]:https://github.com/zer0mode/CS-repo/blob/master/roza-MDD/dbdetails.json
+
+[integration]:https://github.com/zer0mode/CS-repo/blob/master/roza-MDD/rozana_data-integrator.R
+
+[path]:https://github.com/zer0mode/CS-repo/blob/db8ef7bed341570af29041412148a1afaa6e238f/roza-MDD/rozana_data-integrator.R#L379
+
+[db_rozana script]:https://github.com/zer0mode/CS-repo/blob/master/roza-MDD/db_rozana.R
+
+[integrator]:running-the-integration-script
