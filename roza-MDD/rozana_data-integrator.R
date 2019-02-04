@@ -12,20 +12,20 @@ shrinkSource <- function(multiSource, sourceType = "files") {
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   message("Multiple ", sourceType, " found: ")
   print(multiSource)
-  choice <- readline(paste0("Select a ",gsub('.$', '', sourceType)," to proceed (1-",length(multiSource),"): "))
+  choice <- as.numeric(readline(paste0("Select a ",gsub('.$', '', sourceType)," to proceed (1-",length(multiSource),"): ")))
   # \\\\\\\\\\\\\\\\\\
   # Range verification
   #  \\\\\\\\\\\\\\\\\\
-  if (choice <= length(multiSource) && choice > 0) {
-    # Has to be numeric to access the element
-    choice <- as.numeric(choice)
-    message("Selected: '",multiSource[choice],"'. Continuing.")
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # Returning the chosen data source or 'NULL'
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
+  if (!is.na(choice) && choice > 0 && choice <= length(multiSource)) {  
+    #if (choice <= length(multiSource) && choice > 0) {
+    message("Selected: '", multiSource[choice], "'. Continuing.")
   } else {
     message("Value not a number or out of range: ", "'",choice,"'")
+    return(NULL)
   }
-  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-  # Returning the chosen data source or 'NA'
-  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   return(multiSource[choice])
 }
 
@@ -134,6 +134,21 @@ verifyMeasureData <- function(mData, dFields) {
   return(mData)
 }
 
+
+queryFindMaxID <- function(conn, dField, inTab) {
+  #queryMe <- paste0("SELECT ", dField, " FROM ", dbschema, ".", inTab, " ORDER BY ", dField, " DESC LIMIT 1 ;")
+  queryMe <- paste0("SELECT max(", dField, ") FROM ", dbschema, ".", inTab, " ;")
+  return(dbGetQuery(conn, queryMe))
+}
+
+dbIDsSetter <- function(data, dataField) {
+  dbConnector <- connectDB()
+  latestId <- as.numeric(queryFindMaxID(dbConnector, dataField, sub("id_","",dataField)))
+  data[,1] <- seq(latestId+1,latestId+nrow(data))
+  dbDisconnect(dbConnector)
+  return(data)
+}
+
 integrateData <- function(dataIn) {
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # IntegrateData() ~ performs data restructuring steps & verifies certain data values in: 
@@ -156,6 +171,7 @@ integrateData <- function(dataIn) {
 #             matchMapNames ~ dbDataFields 'lexical roots', used for matching and re-indexind
 #             matchIntegNames ~ data colnames 'lexical roots'
 #             indexed, populated, lastFound ~ mapping calculation variables
+#  upper scope= date, dataHere ~ current date and path to save integrated data  
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # Decompose the resource vector
@@ -333,6 +349,14 @@ integrateData <- function(dataIn) {
       data <- verifyMeasureData(data, dbDataFields)
     }
     
+    # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    # Verify db ids & update ids for (measure|litho)
+    #  writing to db fails with wrong or missing ids 
+    #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\    
+    if (grepl("measure",tagFilter) || grepl("litho",tagFilter)) {
+      data <- dbIDsSetter(data, names(data)[1])
+    }    
+    
     # \\\\\\\\\\\\\\\\\\\\
     # Preview & Store data
     #  \\\\\\\\\\\\\\\\\\\\  
@@ -345,9 +369,10 @@ integrateData <- function(dataIn) {
     #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     colConfirm <- toupper(readline("Export to file (press [enter] or [E] to export)? : "))
     if (colConfirm == '' | colConfirm == 'E') {
-      date <- format(Sys.time(), "%d%m%y-%H%M%S")
+      #date <- format(Sys.time(), "%d%m%y-%H%M%S")
       toCsv <- (paste0("rozana_",gsub("id_","",dbDataFields[1]),"_",date,"_",basename(dataIn[[1]])))
-      message("Writing data to file: ",path,"/",toCsv)
+      toCsv <- file.path(dataHere,toCsv)      
+      message("Writing data to file: '",toCsv,"'")
       write.csv2(data, file = toCsv, row.names=FALSE)
       message('Data written')
     } else {
@@ -378,7 +403,12 @@ raw <- NA
 upMatcher <- file.choose()
 #upMatcher <- "/json/config/file/path/set-here.json"
 matcher <- read_json(upMatcher)
-path <- paste0(dirname(upMatcher),"/data")
+# setwd() to load source (db-connector)
+path <- paste0(dirname(upMatcher))
+setwd(path)
+source("./db-connector.R")
+# setwd() to work with data
+path <- file.path(path,"data")
 setwd(path)
 
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -409,6 +439,18 @@ print(raw)
 #dim(raw) #NROW() #nrow() #length(raw[,2])
 raw <- cbind(raw, head(names(matcher$sources), NROW(raw)))
 raw <- cbind(raw, head(matcher$patterns, NROW(raw)))
+
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# Create folder for the new dataset
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+date <- format(Sys.time(), "%d%m%y-%H%M%S")
+dataHere <- paste0(chrgConfig$db$db,"_integ_",date)
+dataHere <- file.path(path,dataHere)
+if (dir.create(dataHere)) {
+  message("New folder created: '",dataHere,"'")
+} else {
+  message("Folder has not been created. See the warning message: ")
+}
 
 # \\\\\\\\\\\\\\\\
 # Process all data
