@@ -46,7 +46,7 @@ dFrame2DBase <- function(storeD, ix) {
       # If the table column names don't match while 'append=TRUE' is given an
       #  error will be raised.
       #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-      dbWriteTable(conn, mappedTable, storeD, row.names=FALSE, append=TRUE)      
+      #dbWriteTable(conn, mappedTable, storeD, row.names=FALSE, append=TRUE)      
     }, error = function(err) {
       message("An error occured while writing to '",db,".", dbschema,".",mappedTable,"'  /status = WRITING INTERRUPTED: ", err)
     })    
@@ -60,7 +60,6 @@ cycleFiles <- function() {
 # cycleFiles() ~ Read data from files (csv)
 #  & store it with dFrame2DBase() _matcher-writer_  
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-#  param= /
 #  localvar= file, dbInsert
 #  upper scope= matchTables, path, inFiles
 #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -75,19 +74,22 @@ cycleFiles <- function() {
     # Read data
     #  \\\\\\\\\
     dbInsert = tryCatch({
-      # \\\\\\\\\\\\\\\\
-      # Verify file size
-      #  \\\\\\\\\\\\\\\\
-      if (file.size(file) > 0){
-        read.csv(file, header=TRUE, sep=";")
+      # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+      # Verify file size & file type
+      #  https://stackoverflow.com/questions/46147901/r-test-if-a-file-exists-and-is-not-a-directory#46147957
+      #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+      #if (file.size(file) > 0 && !dir.exists(file)) {
+      if (!is.na(file.size(file)) && !dir.exists(file)) {        
+        read.csv2(file, header=TRUE)
       }
     }, error = function(err) {
       message("The file '",file,"' is empty or not available. //Nothing to write to DB: ", err)
     })
     # \\\\\\\\\\
     # Store data
-    #  \\\\\\\\\\    
-    dFrame2DBase(dbInsert, i)
+    #  \\\\\\\\\\
+    if (!is.null(dbInsert)) dFrame2DBase(dbInsert, i)
+    else message("Something went wrong. Can not write to DB.")
   }
 }
 
@@ -96,7 +98,6 @@ cycleHits <- function() {
 # cycleHits() ~ Read data from google spreadsheets
 #  & store it with dFrame2DBase() _matcher-writer_  
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-#  param= /
 #  localvar= hit, dbInsert
 #  upper scope= matchTables, gsHits
 #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -126,6 +127,36 @@ cycleHits <- function() {
   }
 }
 
+selectSet <- function(multiSource, sourceType = "files/folders") {
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # shrinkSource() ~ Reduces multiple objects in a vector to a single object
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
+  #  param= multiSource ~ vector with multiple objects of similar context (type)
+  #         sourceType ~ describes source in stdout messages (default = "files/folders")
+  #  localvar= choice ~ index of the selected data source
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  message("Multiple ", sourceType, " found: ")
+  print(multiSource)
+  message("Select a source to import data or dataset :")
+  message("To import multiple files (dataset) use digits and space as separator eg. [1 3 5 8 11]")  
+  choice <- readline("Use one digit only to choose a folder containing dataset files, eg. [3], : ")
+  selection <- as.numeric(read.table(textConnection(choice), stringsAsFactors = F))
+  # \\\\\\\\\\\\\\\\\\
+  # Range verification
+  #  \\\\\\\\\\\\\\\\\\
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # Returning the chosen data source or 'NULL'
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  if (!all(is.na(selection)) && min(selection) > 0 && max(selection) <= length(multiSource)) {
+    message("Selected ", sourceType, ": ")
+    print(multiSource[selection])
+    message("Continuing...")
+  } else {
+    message("Can not select ", sourceType, ", values out of range: ", "'",choice,"'. Cancelling...")
+    return(NULL)
+  }
+  return(multiSource[selection])
+}
 
 # \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\
 # Main Main Main 
@@ -160,73 +191,14 @@ library(httr)
 #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 upConfig <- file.choose()
 chrgConfig <- read_json(upConfig)
+path <- paste0(dirname(upConfig))
+setwd(path)
+source("./db-connector.R")
 
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# Load configuration DB, URLS ...
-#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-pg <- dbDriver(chrgConfig$db$drv)
-db <- chrgConfig$db$db
-dbschema <- chrgConfig$db$schema
-dbuser <- chrgConfig$db$user
-dbaccess <- chrgConfig$db$pwd
-#dbaccess <- readline("DB password : ")
-connectSchema<-paste0("-c search_path=",dbschema)
-#host <- chrgConfig$db$host
-#port <- chrgConfig$db$port
-
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# DB connection
-#  When parameters are specified and ordered exactly as below :
-#   dbConnect(drv, dbuser, dbaccess, host, db, port)
-#  parameter names (dbname="mydb") don't need to be specified
-#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# (1) dbConnect {DBI} 'options="-c search_path=myschema"' parameter
-#  Important - DBIConnection methods dbExistTable(), dbReadTable(), dbWriteTable()
-#   do not perform as expected on non-public database schemas unless the 'options'
-#  parameter is included in dbConnect(), eg :
-#   dbConnect(drv, dbuser, dbaccess, host, db, port, options="-c search_path=myschema")
-#
-#  options argument present                |    no           yes
-#  ---------------------------------------------------------------------
-#  dbReadTable(conn, 'myschema')           |    #ERROR       #OUTPUT OK
-#  dbReadTable(conn, 'myschema.mytable')   |    #ERROR       #ERROR
-#  dbExistsTable(conn, 'myschema')         |    #TRUE *      #TRUE
-#  dbExistsTable(conn, 'myschema.mytable') |    #FALSE       #FALSE
-#                                                                       * public schemas only
-#
-#  - dbGetInfo(conn) does not distinct the difference the connections with or without 'options'
-#  - dbListTables(conn) will return public and non-public schemas
-#  - dbGetQuery(conn, "SELECT table_name FROM information_schema.tables WHERE table_schema='mytable'")
-#
-# >>> Using 'options' parameter
-#  dbConnect(drv, dbname="mydb", user="me", password="younameit", options="-c search_path=myschema")
-# reference@ https://stackoverflow.com/questions/42139964/setting-the-schema-name-in-postgres-using-r#49110504
-# reference@ https://github.com/tomoakin/RPostgreSQL/issues/102
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# (2) Whether the options parameter is present or not myschema and mytable relation can be composed as vector
-#  - dbExistsTable(conn, c("myschema", "mytable"))
-#  - dbReadTable(conn, c("myschema", "mytable"))
-#
-# >>> Without 'options' parameter
-#  dbConnect(drv, dbname="mydb", user="me", password="guessme")
-# reference@ https://stackoverflow.com/questions/10032390/writing-to-specific-schemas-with-rpostgresql#12001451
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# Check database connection & connect
-#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-conn = tryCatch(
-  {
-    message("Connection to database '", db, "' established : schema=",dbschema," /status = SUCCESS")
-    dbConnect(pg, dbname=db, user=dbuser, password=dbaccess, options=connectSchema)
-  }, error = function(err) {
-    message("Connection failed. /status = NOT CONNECTED: ", err)
-    return(NA)
-  }, warning = function(warn) {
-    message("Warning raised - info: ", warn)
-    return(NULL)
-  })
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# Connect via sourced db-connector.R
+#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+conn <- connectDB()
   
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # dbListTables() method returns a character vector of tables available through connection
@@ -261,7 +233,18 @@ if (daType == '' | toupper(daType) == 'F')
   #  (rozana) must be inlcuded in the file names to poperly load  the files
   #   \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   inFiles <- dir(path, pattern = db)
-  
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # Case a) - multiple files ~ dataset in folder ./data
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  if (length(inFiles) > 1) inFiles <- selectSet(inFiles)
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # Case b) - select dataset in ./data/roza_integ_<date>
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  if (dir.exists(file.path(path,inFiles))) {
+    path <- file.path(path, inFiles)
+    inFiles <- dir(path)
+  }
+
   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # Identification of database table names using filenames
   #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -271,11 +254,11 @@ if (daType == '' | toupper(daType) == 'F')
   # https://stackoverflow.com/questions/17215789/extract-a-substring-in-r-according-to-a-pattern
   # https://stackoverflow.com/questions/6638072/escaped-periods-in-r-regular-expressions
   #
-  # \\\\\\\\\\\\\\\\\\\\\\    # \\\\\\\\\\\\\\\\\\\\\\
-  # discard <prefix_>         # discard <.extension>
-  #sub(".*_", "", inFiles)    #sub("\\..*","", inFiles)
-  # \\\\\\\\\\\\\\\\\\\\\\\   # \\\\\\\\\\\\\\\\\\\\\\\\
-  matchTables <- sub("\\..*","",sub(".*_", "", inFiles))
+  # \\\\\\\\\\\\\\\\\\\\\\    # \\\\\\\\\\\\\\\\\\\\\\    # \\\\\\\\\\\\\\\\\\\\\\
+  # discard <prefix_>         # discard <_suffix>         # discard <.extension>
+  #sub("^.*?_", "", inFiles)  #sub("_.*","", inFiles)     #sub("\\..*","", inFiles)
+  # \\\\\\\\\\\\\\\\\\\\\\\   # \\\\\\\\\\\\\\\\\\\\\\\\  # \\\\\\\\\\\\\\\\\\\\\\\\
+  matchTables <- sub("[\\._].*", "", sub("^.*?_", "", inFiles))
 
   # \\\\\\\\\\\\\\\\  
   # Go through files
