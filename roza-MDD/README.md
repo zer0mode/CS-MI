@@ -20,6 +20,7 @@
 + This script and the json config file should be on the same location before commencing data import
 + Raw data / source files have to be located in the sub-folder **`./data`**
   + During the script flow user can select specific datasets if multiple files are found
+  + Restructured data will be stored in **`./data/rozana_integ_<date>`** folder which is used during importation to database
 + Set the **"upMatcher"** variable with _*`dbdetails.json`*_ [path] or use the _file.choose()_ function
 
 
@@ -29,14 +30,16 @@
 
 #### Importing data in database
 
-Once the raw data is restructured it can be imported in database. If database is ready the importation can be launched with the [db_rozana script].
+Once the raw data is restructured it can be imported in database. If the database is ready the importation can be launched with the [db_rozana script]. Refer to the [configuration description](#configuration-file-description) to set the connection credentials.
+
+Restructured data is located in folder **`./data/rozana_integ_<date>`**. User will be prompted to select the dataset's source folder before storing it to db.
 
 Keep the script in the same location with the config file and the [integrator](#running-the-integration-script).
 
 **Important**
 
 + _Database contents_  
-Importing a table without existing foreing keys will not be possible. For example, new 'measure' data can be imported if the corresponding `core` and `parameter` keys exist.  Analogically for `lithologic` data importation, `core` and `facies` keys have to be present in the database.
+Importing a table without existing foreign keys will not be possible. For example, new _'measure'_ data can be imported if the corresponding values for `core` and `parameter` keys exist.  Analogically for _'lithologic'_ data importation, `core` and `facies` keys have to be present in the database.
 
 
 [Configuration file]:https://github.com/zer0mode/CS-repo/blob/master/roza-MDD/dbdetails.json
