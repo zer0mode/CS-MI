@@ -8,6 +8,30 @@
 #     https://stackoverflow.com/questions/12193779/how-to-write-trycatch-in-r#43381670      
 #     \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# Print variables ~ workspace "image"
+#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+#print(ls())
+
+# \\\\\\\\\\\\\\\
+# Clean workspace
+#  \\\\\\\\\\\\\\\
+rm(list=ls())
+
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# Clean particular objects (variable, datasets, functions) 
+#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+#rm(x,y,z...)
+
+# \\\\\\\\\\\\\\
+# Load libraries
+#  \\\\\\\\\\\\\\
+library(RPostgreSQL)
+library(jsonlite)
+#devtools::install_github("maxconway/gsheet")
+library(gsheet)
+library(httr)
+
 
 # \\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\
 # Functions Functions Functions
@@ -28,12 +52,12 @@ dFrame2DBase <- function(storeD, ix) {
   #   in 'matchTables' matching-list using the index 'ix'
   #   \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
   mappedTable <- tbNList[grep(matchTables[ix],tbNList)]
-  
+
   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # parameters are supposed to exist or should be added in the db separately
   #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
   #message(mappedTable != "parameter")
-  if (mappedTable == grepl("measure||litho")) {
+  if (grepl("measure|litho", mappedTable)) {
     writeDBSuccess = tryCatch({
       # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
       # Writing the table contents to DB: 'row.names=FALSE' prevents adding
@@ -138,8 +162,8 @@ selectSet <- function(multiSource, sourceType = "files/folders") {
   message("Multiple ", sourceType, " found: ")
   print(multiSource)
   message("Select a source to import data or dataset :")
-  message("- To import multiple files (dataset) use digits and 'space' as separator (eg.: 1 3 5 8 11)")  
-  choice <- readline("- Use one digit only to choose a folder containing dataset files, (eg.: 3): ")
+  message("- to import multiple files (dataset) use digits and 'space' as separator (eg.: 1 3 5 8 11)")  
+  choice <- readline("- use one digit only to choose a folder containing dataset files (eg.: 3): ")
   selection <- as.numeric(read.table(textConnection(choice), stringsAsFactors = F))
   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # Range verification - Returning the chosen data source or 'NA'
@@ -155,33 +179,10 @@ selectSet <- function(multiSource, sourceType = "files/folders") {
   return(multiSource[selection])
 }
 
+
 # \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\
 # Main Main Main 
 #  \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\
-
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# Print variables ~ workspace "image"
-#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-#print(ls())
-
-# \\\\\\\\\\\\\\\
-# Clean workspace
-#  \\\\\\\\\\\\\\\
-rm(list=ls())
-
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# Clean particular objects (variable, datasets, functions) 
-#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-#rm(x,y,z...)
-
-# \\\\\\\\\\\\\\
-# Load libraries
-#  \\\\\\\\\\\\\\
-library(RPostgreSQL)
-library(jsonlite)
-#devtools::install_github("maxconway/gsheet")
-library(gsheet)
-library(httr)
 
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # Load configuration from json
@@ -289,3 +290,4 @@ if (daType == '' | toupper(daType) == 'F')
 #  \\\\\\\\\\\\\\\\\\
 dbDisconnect(conn)
 rm(conn)
+message("Disconnected from database '", db, "'")

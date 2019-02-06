@@ -1,3 +1,15 @@
+# \\\\\\\\\\\\\\\
+# Clean workspace
+#  \\\\\\\\\\\\\\\
+rm(list=ls())
+
+# \\\\\\\\\\\\\\
+# Load libraries
+#  \\\\\\\\\\\\\\
+library(reshape2)
+library(jsonlite)
+
+
 # \\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\
 # Functions Functions Functions
 #  \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\
@@ -167,15 +179,16 @@ dbIDsSetter <- function(data, dataField) {
   # If the table is empty set first id manually
   #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   if (is.na(latestId)) latestId <- 0
-  # \\\\\\\\\\\\\\\\\\\\\
-  # Data 'identification'
-  #  \\\\\\\\\\\\\\\\\\\\\
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # Data adjustment ~ 'identification'
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   data[,1] <- seq(latestId+1,latestId+nrow(data))
   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # Disconnect & dismiss connection
   #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   dbDisconnect(dbConnector)
   rm(dbConnector)
+  message("Disconnected from database '", db, "'")  
   # \\\\\\\\\\\\\\\\\\\\
   # Return complete data
   #  \\\\\\\\\\\\\\\\\\\\
@@ -418,17 +431,6 @@ integrateData <- function(dataIn) {
 # \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\
 # Main Main Main 
 #  \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\ \\\\
-
-library(reshape2)
-library(jsonlite)
-
-# \\\\\\\\\\
-# Reset vars
-#  \\\\\\\\\\  
-mapNames <- NA
-reStructured <- NULL
-data <- NULL
-raw <- NA
 
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # Load configuration & proceed to restructuring ~ melt(data)
