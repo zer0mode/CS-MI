@@ -33,9 +33,8 @@ dFrame2DBase <- function(storeD, ix) {
   # parameters are supposed to exist or should be added in the db separately
   #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
   #message(mappedTable != "parameter")
-  if (mappedTable != "parameter") {
+  if (mappedTable == grepl("measure||litho")) {
     writeDBSuccess = tryCatch({
-      message("Data stored in '", db, ".", dbschema, ".", mappedTable,"' /status = SUCCESS")
       # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
       # Writing the table contents to DB: 'row.names=FALSE' prevents adding
       #  insertion of the header column.
@@ -46,7 +45,8 @@ dFrame2DBase <- function(storeD, ix) {
       # If the table column names don't match while 'append=TRUE' is given an
       #  error will be raised.
       #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-      #dbWriteTable(conn, mappedTable, storeD, row.names=FALSE, append=TRUE)      
+      dbWriteTable(conn, mappedTable, storeD, row.names=FALSE, append=TRUE)
+      message("Data stored in '", db, ".", dbschema, ".", mappedTable,"' /status = SUCCESS")      
     }, error = function(err) {
       message("An error occured while writing to '",db,".", dbschema,".",mappedTable,"'  /status = WRITING INTERRUPTED: ", err)
     })    
@@ -138,22 +138,19 @@ selectSet <- function(multiSource, sourceType = "files/folders") {
   message("Multiple ", sourceType, " found: ")
   print(multiSource)
   message("Select a source to import data or dataset :")
-  message("To import multiple files (dataset) use digits and space as separator eg. [1 3 5 8 11]")  
-  choice <- readline("Use one digit only to choose a folder containing dataset files, eg. [3], : ")
+  message("- To import multiple files (dataset) use digits and 'space' as separator (eg.: 1 3 5 8 11)")  
+  choice <- readline("- Use one digit only to choose a folder containing dataset files, (eg.: 3): ")
   selection <- as.numeric(read.table(textConnection(choice), stringsAsFactors = F))
-  # \\\\\\\\\\\\\\\\\\
-  # Range verification
-  #  \\\\\\\\\\\\\\\\\\
-  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-  # Returning the chosen data source or 'NULL'
-  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # Range verification - Returning the chosen data source or 'NA'
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   if (!all(is.na(selection)) && min(selection) > 0 && max(selection) <= length(multiSource)) {
     message("Selected ", sourceType, ": ")
     print(multiSource[selection])
     message("Continuing...")
   } else {
     message("Can not select ", sourceType, ", values out of range: ", "'",choice,"'. Cancelling...")
-    return(NULL)
+    return(NA)
   }
   return(multiSource[selection])
 }
@@ -170,7 +167,7 @@ selectSet <- function(multiSource, sourceType = "files/folders") {
 # \\\\\\\\\\\\\\\
 # Clean workspace
 #  \\\\\\\\\\\\\\\
-#rm(list=ls())
+rm(list=ls())
 
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # Clean particular objects (variable, datasets, functions) 
