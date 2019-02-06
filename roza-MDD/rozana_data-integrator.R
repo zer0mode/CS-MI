@@ -13,18 +13,14 @@ shrinkSource <- function(multiSource, sourceType = "files") {
   message("Multiple ", sourceType, " found: ")
   print(multiSource)
   choice <- as.numeric(readline(paste0("Select a ",gsub('.$', '', sourceType)," to proceed (1-",length(multiSource),"): ")))
-  # \\\\\\\\\\\\\\\\\\
-  # Range verification
-  #  \\\\\\\\\\\\\\\\\\
-  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-  # Returning the chosen data source or 'NULL'
-  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # Range verification - Returning the chosen data source or 'NA'
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
   if (!is.na(choice) && choice > 0 && choice <= length(multiSource)) {  
-    #if (choice <= length(multiSource) && choice > 0) {
     message("Selected: '", multiSource[choice], "'. Continuing.")
   } else {
     message("Value not a number or out of range: ", "'",choice,"'")
-    return(NULL)
+    return(NA)
   }
   return(multiSource[choice])
 }
@@ -136,16 +132,53 @@ verifyMeasureData <- function(mData, dFields) {
 
 
 queryFindMaxID <- function(conn, dField, inTab) {
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# queryFindMaxID() ~ queries a database table for max id
+#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+#  params= conn ~ database connection carrier
+#          dField ~ database datafield/variable/column
+#          inTab ~ database table
+#  upper scope= dbschema ~ database table
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   #queryMe <- paste0("SELECT ", dField, " FROM ", dbschema, ".", inTab, " ORDER BY ", dField, " DESC LIMIT 1 ;")
   queryMe <- paste0("SELECT max(", dField, ") FROM ", dbschema, ".", inTab, " ;")
+  #select max(id_lithologic_unit) from roza.lithologic_unit;
+  # \\\\\\\\\\\\\\\\\\\
+  # Return max ID found
+  #  \\\\\\\\\\\\\\\\\\\
   return(dbGetQuery(conn, queryMe))
 }
 
 dbIDsSetter <- function(data, dataField) {
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# dbIDsSetter() ~ sets IDs in line with current DB data
+#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+#  params= data ~ dataframe 'unadjusted' for DB writing
+#          dataField ~ datafield containing ids
+#  localvars= latestId ~ value of max ID found in DB
+#  upper scope= db ~ database to perform query on
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\
+  # Connect to db for querying
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\
   dbConnector <- connectDB()
   latestId <- as.numeric(queryFindMaxID(dbConnector, dataField, sub("id_","",dataField)))
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # If the table is empty set first id manually
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  if (is.na(latestId)) latestId <- 0
+  # \\\\\\\\\\\\\\\\\\\\\
+  # Data 'identification'
+  #  \\\\\\\\\\\\\\\\\\\\\
   data[,1] <- seq(latestId+1,latestId+nrow(data))
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # Disconnect & dismiss connection
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   dbDisconnect(dbConnector)
+  rm(dbConnector)
+  # \\\\\\\\\\\\\\\\\\\\
+  # Return complete data
+  #  \\\\\\\\\\\\\\\\\\\\
   return(data)
 }
 
@@ -402,7 +435,7 @@ raw <- NA
 #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 upMatcher <- file.choose()
 #upMatcher <- "/json/config/file/path/set-here.json"
-matcher <- read_json(upMatcher)
+matcher <- chrgConfig <- read_json(upMatcher)
 # setwd() to load source (db-connector)
 path <- paste0(dirname(upMatcher))
 setwd(path)
@@ -432,37 +465,37 @@ for (p in 1:length(matcher$sources)) {
 message("Datasets selected for integration: ")
 print(raw)
 
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# Bind patterns, corresponding to the source
-#  used as parameters during the function call
-#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-#dim(raw) #NROW() #nrow() #length(raw[,2])
-raw <- cbind(raw, head(names(matcher$sources), NROW(raw)))
-raw <- cbind(raw, head(matcher$patterns, NROW(raw)))
-
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# Create folder for the new dataset
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-date <- format(Sys.time(), "%d%m%y-%H%M%S")
-dataHere <- paste0(chrgConfig$db$db,"_integ_",date)
-dataHere <- file.path(path,dataHere)
-if (dir.create(dataHere)) {
-  message("New folder created: '",dataHere,"'")
-} else {
-  message("Folder has not been created. See the warning message: ")
+if (!all(is.na(raw))) {
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # Bind patterns, corresponding to the source
+  #  used as parameters during the function call
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  #dim(raw) #NROW() #nrow() #length(raw[,2])
+  raw <- cbind(raw, head(names(matcher$sources), NROW(raw)))
+  raw <- cbind(raw, head(matcher$patterns, NROW(raw)))
+  
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # Create folder for the new dataset
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  date <- format(Sys.time(), "%d%m%y-%H%M%S")
+  dataHere <- paste0(chrgConfig$db$db,"_integ_",date)
+  dataHere <- file.path(path,dataHere)
+  if (dir.create(dataHere)) {
+    message("New folder created: '",dataHere,"'")
+  } else {
+    message("Folder has not been created. See the warning message: ")
+  }
 }
 
 # \\\\\\\\\\\\\\\\
 # Process all data
 #  \\\\\\\\\\\\\\\\
-# \\\\\\\\\\\
-# Run through
-#  \\\\\\\\\\\
-for (d in 1:nrow(raw)) {
+for (d in 1:NROW(raw)) {
   # \\\\\\\\\\\\\\\\\\\\\\\
   # Restructure & integrate
   #  \\\\\\\\\\\\\\\\\\\\\\\
   if (!is.na(raw[[d]])) data <- integrateData(raw[d,])
+  #data <- integrateData(raw[d,])
   # \\\\\\\\\\\\\\\\\\\\\
   # If the input is empty
   #  \\\\\\\\\\\\\\\\\\\\\
