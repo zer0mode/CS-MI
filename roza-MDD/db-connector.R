@@ -51,9 +51,14 @@ connectSchema<-paste0("-c search_path=",dbschema)
 # reference@ https://stackoverflow.com/questions/10032390/writing-to-specific-schemas-with-rpostgresql#12001451
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# Check database connection & connect
-#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# \\\\\\\\\\\\\\\\\\\\\
+# Database availability
+#  \\\\\\\\\\\\\\\\\\\\\
+dbReady <- dbCanConnect(pg, dbname=db, user=dbuser, password=dbaccess, options=connectSchema)
+
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# Establish database connection
+#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 connectDB <- function() {
   conn = tryCatch(
   {

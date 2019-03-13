@@ -82,11 +82,11 @@ findTopCol <- function(dHasTop) {
 }
 
 loadData <- function(dataSource) {
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# loadData() ~ reads csv file with erroer handling
-#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# loadData() ~ reads csv file with error handling
+#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 #  param= dataSource ~ filepath as string
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   dataLoaded = tryCatch({
     if (file.size(dataSource) > 0) read.csv2(dataSource)
   }, error = function(err) {
@@ -169,11 +169,12 @@ dbIDsSetter <- function(data, dataField) {
 #          dataField ~ datafield containing ids
 #  localvars= latestId ~ value of max ID found in DB
 #  upper scope= db ~ database to perform query on
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
-  # \\\\\\\\\\\\\\\\\\\\\\\\\\
-  # Connect to db for querying
-  #  \\\\\\\\\\\\\\\\\\\\\\\\\\
-  dbConnector <- connectDB()
+#               dbConnector ~ object to DB engine defined
+#                             in sourced db-connector.R
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
+  # \\\\\\\\\\\\
+  # Query max id
+  #  \\\\\\\\\\\\
   latestId <- as.numeric(queryFindMaxID(dbConnector, dataField, sub("id_","",dataField)))
   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # If the table is empty set first id manually
@@ -183,12 +184,6 @@ dbIDsSetter <- function(data, dataField) {
   # Data adjustment ~ 'identification'
   #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   data[,1] <- seq(latestId+1,latestId+nrow(data))
-  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-  # Disconnect & dismiss connection
-  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-  dbDisconnect(dbConnector)
-  rm(dbConnector)
-  message("Disconnected from database '", db, "'")  
   # \\\\\\\\\\\\\\\\\\\\
   # Return complete data
   #  \\\\\\\\\\\\\\\\\\\\
@@ -399,9 +394,9 @@ integrateData <- function(dataIn) {
     # Verify db ids & update ids for (measure|litho)
     #  writing to db fails with wrong or missing ids 
     #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\    
-    if (grepl("measure",tagFilter) || grepl("litho",tagFilter)) {
+    if (dbReady && grepl("measure|litho", tagFilter)) {
       data <- dbIDsSetter(data, names(data)[1])
-    }    
+    }   
     
     # \\\\\\\\\\\\\\\\\\\\
     # Preview & Store data
@@ -489,6 +484,15 @@ if (!all(is.na(raw))) {
   }
 }
 
+# \\\\\\\\\\\\\\\\\\\\\\\\\\
+# Connect to DB if available
+#  \\\\\\\\\\\\\\\\\\\\\\\\\\
+if (dbReady) {
+  dbConnector <- connectDB()
+} else {
+  message("/INFO: Database not configured. Unable to set data entries' IDs at this stage. Continuing.")
+}
+
 # \\\\\\\\\\\\\\\\
 # Process all data
 #  \\\\\\\\\\\\\\\\
@@ -502,6 +506,15 @@ for (d in 1:NROW(raw)) {
   # If the input is empty
   #  \\\\\\\\\\\\\\\\\\\\\
   else message("No input data for '", names(matcher$sources[d]),"-",matcher$sources[[d]],"'. Nothing to process")
+}
+
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# Disconnect & dismiss connection
+#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+if (dbReady) {
+  dbDisconnect(dbConnector)
+  rm(dbConnector)
+  message("Disconnected from database '", db, "'")
 }
 
 # ok
