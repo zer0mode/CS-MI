@@ -31,12 +31,6 @@ library(jsonlite)
 library(gsheet)
 library(httr)
 
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# Load DB connector & data ID handler
-#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-source("./db-connector.R")
-source("./id-handler.R")
-
 
 # \\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\
 # Functions Functions Functions
@@ -61,7 +55,10 @@ dFrame2DBase <- function(storeD, ix) {
   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # Handle data identifiers if missing
   #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-  if (any(is.na(storeD[,1]))) storeD <- dbIDsSetter(conn, storeD, names(storeD)[1])  
+  if (any(is.na(storeD[,1]))) {
+    storeD <- dbIDsSetter(conn, storeD, names(storeD)[1])
+    message("Data ready - missing identifiers updated")
+  } 
 
   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # parameters are supposed to exist or should be added in the db separately
@@ -201,6 +198,12 @@ upConfig <- file.choose()
 chrgConfig <- read_json(upConfig)
 path <- paste0(dirname(upConfig))
 setwd(path)
+
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# Load DB connector & data ID handler
+#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+source("./db-connector.R")
+source("./id-handler.R")
 
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # Connect via sourced db-connector.R

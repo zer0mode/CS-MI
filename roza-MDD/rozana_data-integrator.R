@@ -9,11 +9,6 @@ rm(list=ls())
 library(reshape2)
 library(jsonlite)
 
-# \\\\\\\\\\\\\\\\\
-# Load DB connector
-#  \\\\\\\\\\\\\\\\\
-source("./db-connector.R")
-
 
 # \\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\
 # Functions Functions Functions
@@ -354,10 +349,6 @@ integrateData <- function(dataIn) {
     #  writing to db fails with wrong or missing ids 
     #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\    
     if (dbReady && grepl("measure|litho", tagFilter)) {
-      # \\\\\\\\\\\\\\\\\\\\\\\\
-      # get externalised handler
-      #  \\\\\\\\\\\\\\\\\\\\\\\\
-      source("./id-handler.R")      
       data <- dbIDsSetter(dbConnector, data, names(data)[1])      
     }   
     
@@ -399,8 +390,13 @@ matcher <- chrgConfig <- read_json(upMatcher)
 # setwd() to load source (db-connector)
 path <- paste0(dirname(upMatcher))
 setwd(path)
-# load DB connector
+
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# Load DB connection & data ID handler
+#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 source("./db-connector.R")
+source("./id-handler.R")
+
 # setwd() to work with data
 path <- file.path(path,"data")
 setwd(path)
