@@ -9,6 +9,11 @@ rm(list=ls())
 library(reshape2)
 library(jsonlite)
 
+# \\\\\\\\\\\\\\\\\
+# Load DB connector
+#  \\\\\\\\\\\\\\\\\
+source("./db-connector.R")
+
 
 # \\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\
 # Functions Functions Functions
@@ -133,7 +138,7 @@ verifyMeasureData <- function(mData, dFields) {
   # \\\\\\\\\\\
   # Add dates ?
   #  \\\\\\\\\\\
-  print("Verifying dates ...")
+  message("Verifying dates ...")
   if (all(is.na(mData[dateC]))) {
     #data[dateC] <- format(Sys.time(), "%x %X")
     mData[dateC] <- format(Sys.time(), "%x")  
@@ -142,53 +147,6 @@ verifyMeasureData <- function(mData, dFields) {
   return(mData)
 }
 
-
-queryFindMaxID <- function(conn, dField, inTab) {
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# queryFindMaxID() ~ queries a database table for max id
-#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-#  params= conn ~ database connection carrier
-#          dField ~ database datafield/variable/column
-#          inTab ~ database table
-#  upper scope= dbschema ~ database table
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-  #queryMe <- paste0("SELECT ", dField, " FROM ", dbschema, ".", inTab, " ORDER BY ", dField, " DESC LIMIT 1 ;")
-  queryMe <- paste0("SELECT max(", dField, ") FROM ", dbschema, ".", inTab, " ;")
-  #select max(id_lithologic_unit) from roza.lithologic_unit;
-  # \\\\\\\\\\\\\\\\\\\
-  # Return max ID found
-  #  \\\\\\\\\\\\\\\\\\\
-  return(dbGetQuery(conn, queryMe))
-}
-
-dbIDsSetter <- function(data, dataField) {
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-# dbIDsSetter() ~ sets IDs in line with current DB data
-#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-#  params= data ~ dataframe 'unadjusted' for DB writing
-#          dataField ~ datafield containing ids
-#  localvars= latestId ~ value of max ID found in DB
-#  upper scope= db ~ database to perform query on
-#               dbConnector ~ object to DB engine defined
-#                             in sourced db-connector.R
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
-  # \\\\\\\\\\\\
-  # Query max id
-  #  \\\\\\\\\\\\
-  latestId <- as.numeric(queryFindMaxID(dbConnector, dataField, sub("id_","",dataField)))
-  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-  # If the table is empty set first id manually
-  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-  if (is.na(latestId)) latestId <- 0
-  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-  # Data adjustment ~ 'identification'
-  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-  data[,1] <- seq(latestId+1,latestId+nrow(data))
-  # \\\\\\\\\\\\\\\\\\\\
-  # Return complete data
-  #  \\\\\\\\\\\\\\\\\\\\
-  return(data)
-}
 
 integrateData <- function(dataIn) {
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -212,7 +170,8 @@ integrateData <- function(dataIn) {
 #             matchMapNames ~ dbDataFields 'lexical roots', used for matching and re-indexind
 #             matchIntegNames ~ data colnames 'lexical roots'
 #             indexed, populated, lastFound ~ mapping calculation variables
-#  upper scope= date, dataHere ~ current date and path to save integrated data  
+#  upper scope= date, dataHere ~ current date and path to save integrated data
+#               dbConnector ~ connection to DB
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # Decompose the resource vector
@@ -395,7 +354,11 @@ integrateData <- function(dataIn) {
     #  writing to db fails with wrong or missing ids 
     #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\    
     if (dbReady && grepl("measure|litho", tagFilter)) {
-      data <- dbIDsSetter(data, names(data)[1])
+      # \\\\\\\\\\\\\\\\\\\\\\\\
+      # get externalised handler
+      #  \\\\\\\\\\\\\\\\\\\\\\\\
+      source("./id-handler.R")      
+      data <- dbIDsSetter(dbConnector, data, names(data)[1])      
     }   
     
     # \\\\\\\\\\\\\\\\\\\\
@@ -436,6 +399,7 @@ matcher <- chrgConfig <- read_json(upMatcher)
 # setwd() to load source (db-connector)
 path <- paste0(dirname(upMatcher))
 setwd(path)
+# load DB connector
 source("./db-connector.R")
 # setwd() to work with data
 path <- file.path(path,"data")

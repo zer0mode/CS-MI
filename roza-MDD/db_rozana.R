@@ -26,11 +26,16 @@ rm(list=ls())
 # \\\\\\\\\\\\\\
 # Load libraries
 #  \\\\\\\\\\\\\\
-library(RPostgreSQL)
 library(jsonlite)
 #devtools::install_github("maxconway/gsheet")
 library(gsheet)
 library(httr)
+
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+# Load DB connector & data ID handler
+#  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+source("./db-connector.R")
+source("./id-handler.R")
 
 
 # \\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\ \\\\\\\\\
@@ -43,7 +48,7 @@ dFrame2DBase <- function(storeD, ix) {
 #  param= storeD ~ current data(frame) to store in DB
 #         ix ~ current data source index, see cycleFiles() & cycleHits() 
 #  localvar= mappedTable
-#  upper scope= tbNList, matchTables, db, dbschema
+#  upper scope= tbNList, matchTables, conn, db, dbschema
 #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -52,6 +57,11 @@ dFrame2DBase <- function(storeD, ix) {
   #   in 'matchTables' matching-list using the index 'ix'
   #   \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\  
   mappedTable <- tbNList[grep(matchTables[ix],tbNList)]
+  
+  # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  # Handle data identifiers if missing
+  #  \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+  if (any(is.na(storeD[,1]))) storeD <- dbIDsSetter(conn, storeD, names(storeD)[1])  
 
   # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
   # parameters are supposed to exist or should be added in the db separately
@@ -191,7 +201,6 @@ upConfig <- file.choose()
 chrgConfig <- read_json(upConfig)
 path <- paste0(dirname(upConfig))
 setwd(path)
-source("./db-connector.R")
 
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # Connect via sourced db-connector.R

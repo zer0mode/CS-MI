@@ -1,3 +1,8 @@
+# \\\\\\\\\\\\\\
+# Load libraries
+#  \\\\\\\\\\\\\\
+library(RPostgreSQL)
+
 # \\\\\\\\\\\\\\\\\\\\\
 # Load DB configuration
 #  \\\\\\\\\\\\\\\\\\\\\
