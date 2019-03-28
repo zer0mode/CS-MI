@@ -11,7 +11,7 @@
        2. data restructuring  
     - must be modified if new data source ready for integration contains different parameters' definitions
     - use space character as separator
-+ sources=		`pattern definitions for filtering the files found in `**`./data`**` folder used for importing correct files and treating data according to the data context`  
++ sources=		`pattern definitions` for filtering the files found in **`./data`** folder used for importing correct files and treating data according to the data context  
 
   > file content = type of data (measure, litho, ...) is 'recognized' by its filename (analysis, log, ...)
 
@@ -43,6 +43,22 @@ This part is covered as well in a short [video].
 Once the raw data is restructured it can be imported in database. If the database is ready the importation can be launched with the [db_rozana script]. Refer to the [configuration description](#configuration-file-description) to set the connection credentials.
 
 Restructured data is located in folder **`./data/rozana_integ_<date>`**. User will be prompted to select the dataset's source folder before storing it to db.
+
+#### Packages
+
+Requirements: install the following packages using the R shell.  
+
+- _RPostgreSQL_  
+`install.packages("RPostgreSQL")`
+
+- _reshape2, jsonlite_   
+`install.packages(c("reshape2", "jsonlite")`  
+
+- _gsheet, httr_  
+`install.packages(c("gsheet", "httr")`  
+
+> All at once  
+`install.packages(c("RPostgreSQL", "reshape2", "jsonlite", “gsheet”, “httr”))`
 
 ---
 #### Notes
